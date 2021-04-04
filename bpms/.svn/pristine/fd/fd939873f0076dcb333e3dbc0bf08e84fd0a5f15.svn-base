@@ -1,0 +1,193 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://egovframework.gov/ctl/ui" prefix="ui" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html>
+<html>
+<head>
+<jsp:include page="/includee/preScript.jsp"></jsp:include>
+<style type="text/css">
+	input::placeholder{
+	    color: #D8D8D8;
+	}
+	table {
+	    border-top: 1px solid #444444;
+	    border-collapse: collapse;
+	}
+	th, td {
+	    border-bottom: 1px solid #444444;
+	    padding: 10px;
+	}
+	a{
+	    color: black;
+	}
+	.title{
+	    width: 600px;
+	}
+	.writeday{
+		width: 300px;
+	}
+	#divTop{
+		margin-bottom: 40px;
+	}
+</style>
+</head>
+<body>
+<div class="panel-header">
+	<div class="page-inner">
+		<span class="project-path">
+			<a href="">프로젝트</a>/
+			<a href="">PMS 프로그램 개발</a>
+		</span>
+   
+		<div class="issue-header clearfix">
+			<div class="float-left">
+				<h1 class="fw-mediumbold"> 공지사항</h1>
+			</div>
+   
+			<button class="btn btn-primary float-right d-flex" onclick="location.href='insertForm.do?proId=${param.proId}'">
+				<i class="fas fa-plus">
+	            	등록
+				</i>
+			</button>
+		</div>		
+		<div class="float-right d-flex">
+			<div class="input-group" id="inputUI">
+				<select class="form-control" name="searchType">
+					<option>검색조건 선택</option>
+           			<option value="title" ${'title' eq param.searchType?"selected":"" }>제목</option>
+           			<option value="content" ${'content' eq param.searchType?"selected":"" }>내용</option>
+           		</select>
+               	<input type="text" class="form-control" id="search" name="searchWord" value="${pagingVO.searchVO.searchWord }" placeholder="search">
+			</div>
+		</div>
+		<table class="table">
+		<thead>
+			<tr>
+				<th>
+					<button class="dropdown-toggle css-bpmsbtn1" type="button" id="dropdownMenuButton" data-toggle="dropdown" name="sortCondition" value="boardNo">
+		           	 글 번호
+					</button>
+					<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+						
+						<input type="radio" class="sortBtn" name="sortType" value="asc" onchange="">
+						<label>오름차순</label>
+						
+						<input type="radio" class="sortBtn" name="sortType" value="desc" onchange="">
+						<label>내림차순</label>
+							
+					</div>
+				</th>
+				<th class="title">제목</th>
+				<th>작성자</th>
+				<th class="writeday">
+					<button class="dropdown-toggle css-bpmsbtn1" type="button" id="dropdownMenuButton" data-toggle="dropdown" name="sortCondition" value="createDate">
+		           	작성일자
+					</button>
+					<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+						
+						<input type="radio" class="sortBtn" name="sortType" value="asc" onchange=""><label>오름차순</label>
+
+						<input type="radio" class="sortBtn" name="sortType" value="desc" onchange=""><label>내림차순</label>
+
+					</div>
+				</th>
+				<th>수정일자</th>
+			</tr>
+		</thead>
+			<tbody id="listBody">
+			</tbody>
+		</table>
+		<div id="pagingArea"></div>
+		<form id = "searchForm">
+			<input type="hidden" name="page" >
+			<input type="hidden" name="searchType" value="${pagingVO.searchVO.searchType }">
+			<input type="hidden" name="searchWord" value="${pagingVO.searchVO.searchWord }">
+			<input type="hidden" name="sortCondition" value="${pagingVO.sortVO.sortCondition }">
+			<input type="hidden" name="sortType" value="${pagingVO.sortVO.sortType }">
+		</form>
+	</div>
+</div>
+<form id="noticeView" method="post" action="">
+	<input type="hidden" name="boardNo">
+</form>
+
+<script type="text/javascript">
+	let listBody = $("#listBody");
+	
+	let noticeView = $("#noticeView");
+	listBody.on("click", "tr", function(){
+		let boardNo = $(this).find("td").eq(0).text();
+		noticeView.attr("action", "${cPath}/board/proNoticeView/"+boardNo+"?proId=${param.proId}")
+		noticeView.find("input[name='boardNo']").val(boardNo);
+		noticeView.submit();
+	});
+
+	let pagingArea = $("#pagingArea").on("click", "a" ,function(event){
+		event.preventDefault();
+		let page = $(this).data("page");
+		searchForm.find("[name='page']").val(page);
+		searchForm.submit();
+		searchForm.find("[name='page']").val("");
+		return false;
+	});
+	
+	let searchForm = $("#searchForm").ajaxForm({
+		dataType:"json",
+		success:function(paging){
+			let noticeList = paging.pagingVO.dataList;
+			let pagingHTML = paging.pagingVO.pagingHTML;
+			let trTags = [];
+			if(noticeList.length > 0){
+				$(noticeList).each(function(idx, pronotice){
+					trTags.push(
+		  				$("<tr>").append(
+		  					$("<td>").text(pronotice.boardNo)		
+		  					, $("<td>").text(pronotice.boardTitle)
+		  					, $("<td>").text(pronotice.boardWriter)		
+		  					, $("<td>").text(pronotice.createDate)	
+		  					, $("<td>").text(pronotice.modifyDate)
+		  				).data("pronotice", pronotice)
+		  			);					
+				});
+			}
+			else{
+				trTags.push(
+			  		$("<tr>").html(
+			  			$("<td colspan='4'>").addClass("text-center").text("검색 결과 없음.")
+			  		)	
+				);
+			}
+		  	listBody.html(trTags);
+		  	pagingArea.html(pagingHTML);
+		}
+	}).submit();
+	
+	$("#search").keyup(function(){
+		let inputs = $(this).parents("div#inputUI").find(":input[name]");
+		$(inputs).each(function(index, input){
+			let name = $(this).attr("name");
+			let value = $(this).val();
+			let hidden = searchForm.find("[name='"+name+"']");
+			hidden.val(value);
+		});
+		searchForm.submit();
+	});
+	
+	$("input:radio[name=sortType]").on("click", function(){
+		let inputs = $(this).parents("th").find(":input[name]");
+		$(inputs).each(function(index, input){
+			let name = $(this).attr("name");
+			let value = $(this).val();
+			let hidden = searchForm.find("[name='"+name+"']");
+			hidden.val(value);
+		});
+		let name = $(this).attr("name");
+		let val = $(this).val();
+		searchForm.find("input[name='" + name + "']").val(val);
+		
+		searchForm.submit();
+	});
+</script>
+</body>
+</html>

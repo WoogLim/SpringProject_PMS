@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.schedule.dao.ScheduleDAO">
+
+	<sql id="searchFrag">
+		<if test="searchDetail!=null">
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workType)">
+				AND WORK_TYPE = #{searchDetail.workType}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workState)">
+				AND WORK_STATE = #{searchDetail.workState}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workRank)">
+				AND WORK_RANK = #{searchDetail.workRank}
+			</if>
+		</if>
+	</sql>
+	
+	<select id="ganttList" parameterType="kr.or.ddit.projects.schedule.vo.ScheduleVO" resultType="kr.or.ddit.projects.schedule.vo.GanttVO">
+		SELECT B.BOARD_TITLE,
+			   <![CDATA[
+		       B.PRO_ID,
+		       A.WORK_ID,
+		       DECODE(LEVEL, 1, '', LPAD('└>', 6*2*(LEVEL-1)+2, '&nbsp;')) || A.WORK_TYPE WORK_TYPE,
+		       A.START_DATE,
+		       A.END_DATE,
+		       A.PROGRESS,
+		       A.WORK_DIRECTOR,
+		       A.WORK_PARENT
+			   ]]>
+		  FROM WORK A LEFT OUTER JOIN BOARD B ON (WORK_ID = BOARD_NO)
+		 WHERE B.PRO_ID = #{proId}
+		 <include refid="searchFrag" />
+		 START WITH WORK_PARENT IS NULL
+	   CONNECT BY PRIOR A.WORK_ID = WORK_PARENT
+		 ORDER SIBLINGS BY A.WORK_ID ASC
+	</select>
+	
+	<select id="ganttView" parameterType="kr.or.ddit.projects.schedule.vo.GanttVO" resultType="kr.or.ddit.projects.schedule.vo.GanttVO">
+		SELECT B.BOARD_TITLE,
+		       B.PRO_ID,
+		       A.WORK_ID,
+		       A.WORK_RANK,
+		       A.WORK_TYPE,
+		       A.WORK_STATE,
+		       TO_CHAR (START_DATE, 'YYYYMMDD') START_DATE,
+		       TO_CHAR (END_DATE, 'YYYYMMDD') END_DATE,
+		       A.PROGRESS,
+		       A.WORK_DIRECTOR,
+		       A.WORK_PARENT
+		  FROM WORK A LEFT OUTER JOIN BOARD B ON (WORK_ID = BOARD_NO)
+		 WHERE A.WORK_ID = #{workId }
+	</select>
+	
+	<select id="calendarList" parameterType="kr.or.ddit.projects.schedule.vo.ScheduleVO" resultType="kr.or.ddit.projects.schedule.vo.CalendarVO">
+		SELECT A.CAL_ID,
+		       A.CAL_RANK,
+		       A.CAL_TYPE,
+		       A.CAL_STATE,
+		       A.CAL_SHOW,
+		       (TO_NUMBER(A.START_DATE-TO_DATE('01-01-1970 00:00:00', 'DD-MM-YYYY HH24:MI:SS'))*24*60*60) START_DATE,
+       		   (TO_NUMBER(A.END_DATE-TO_DATE('01-01-1970 00:00:00', 'DD-MM-YYYY HH24:MI:SS'))*24*60*60) END_DATE,
+		       A.PROGRESS,
+		       A.DIRECTOR,
+		       B.BOARD_TITLE,
+		       B.BOARD_CONTENT,
+		       B.PRO_ID,
+		       B.CODE
+		  FROM
+		(SELECT ISSUE_ID CAL_ID,
+		        ISSUE_RANK CAL_RANK,
+		        ISSUE_TYPE CAL_TYPE,
+		        ISSUE_STATE CAL_STATE,
+		        ISSUE_SHOW CAL_SHOW,
+		        START_DATE START_DATE,
+		        END_DATE END_DATE,
+		        PROGRESS PROGRESS,
+		        ISSUE_DIRECTOR DIRECTOR
+		   FROM ISSUE
+		  UNION
+		 SELECT WORK_ID CAL_ID,
+		        WORK_RANK CAL_RANK,
+		        WORK_TYPE CAL_TYPE,
+		        WORK_STATE CAL_STATE,
+		        WORK_SHOW CAL_SHOW,
+		        START_DATE START_DATE,
+		        END_DATE END_DATE,
+		        PROGRESS PROGRESS,
+		        WORK_DIRECTOR DIRECTOR
+		   FROM WORK) A LEFT OUTER JOIN BOARD B ON (A.CAL_ID = B.BOARD_NO)
+		  WHERE PRO_ID = #{proId, jdbcType=VARCHAR}
+		  ORDER BY CAL_ID ASC
+	</select>
+	
+	<update id="calendarUpdateBoard">
+		UPDATE BOARD
+		   SET BOARD_TITLE = #{boardTitle, jdbcType=VARCHAR}
+		 WHERE BOARD_NO = #{calId}
+	</update>
+	
+	<update id="calendarUpdateIssue">
+		UPDATE ISSUE
+		   SET START_DATE = TO_DATE('19700101','yyyymmdd') + (((#{startDate}+32400000)/1000)/24/60/60),
+		       MODIFY_DATE = SYSDATE,
+		       END_DATE = TO_DATE('19700101','yyyymmdd') + ((#{endDate}/1000)/24/60/60)
+		 WHERE ISSUE_ID = #{calId}
+	</update>
+	
+	<update id="calendarUpdateWork">
+		UPDATE WORK
+		   SET START_DATE = TO_DATE('19700101','yyyymmdd') + (((#{startDate}+32400000)/1000)/24/60/60),
+		       MODIFY_DATE = SYSDATE,
+		       END_DATE = TO_DATE('19700101','yyyymmdd') + ((#{endDate}/1000)/24/60/60)
+		 WHERE WORK_ID = #{calId}
+	</update>
+	
+	<delete id="calendarDeleteIssue">
+		DELETE
+		  FROM ISSUE
+		 WHERE ISSUE_ID = #{calId}
+	</delete>
+
+	<delete id="calendarDeleteWork">
+		DELETE
+		  FROM WORK
+		 WHERE WORK_ID = #{calId}
+	</delete>
+	
+	<select id="personalScheduleList" parameterType="kr.or.ddit.projects.schedule.vo.ScheduleVO" resultType="kr.or.ddit.projects.schedule.vo.CalendarVO">
+		SELECT CAL_ID,
+       		   START_DATE,
+       		   END_DATE,
+      		   DIRECTOR,
+     		   BOARD_TITLE ,
+    		   CAL_LOCATION,
+    		   PRO_ID
+  		  FROM CALENDAR
+  		 WHERE PRO_ID = #{proId, jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="personalInsertSchedule" parameterType="kr.or.ddit.projects.schedule.vo.CalendarVO">
+	<selectKey order="BEFORE" keyProperty="calId" resultType="int">
+		SELECT NVL(MAX(CAL_ID), 0)+1
+		  FROM CALENDAR
+	</selectKey>	
+		INSERT INTO CALENDAR(
+					CAL_ID,
+        			START_DATE,
+            		END_DATE,
+            		DIRECTOR,
+            		BOARD_TITLE,
+            		CAL_LOCATION,
+            		PRO_ID
+		)
+		VALUES(
+			#{calId, jdbcType=NUMERIC},
+			#{startDate, jdbcType=VARCHAR},
+			#{endDate, jdbcType=VARCHAR},
+			#{director, jdbcType=VARCHAR},
+			#{boardTitle, jdbcType=VARCHAR},
+			#{calLocation, jdbcType=VARCHAR},
+			#{proId, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="personalUpdateSchedule">
+		UPDATE CALENDAR
+		   SET BOARD_TITLE = #{boardTitle, jdbcType=VARCHAR},
+		       CAL_LOCATION = #{calLocation, jdbcType=VARCHAR},
+		       START_DATE = #{startDate, jdbcType=VARCHAR},
+		       END_DATE = #{endDate, jdbcType=VARCHAR}
+		 WHERE CAL_ID = #{calId}
+		       
+	</update>
+	
+	<delete id="personalDeleteSchedule">
+		DELETE
+		  FROM CALENDAR
+		 WHERE CAL_ID = #{calId, jdbcType=NUMERIC }
+	</delete>
+</mapper>

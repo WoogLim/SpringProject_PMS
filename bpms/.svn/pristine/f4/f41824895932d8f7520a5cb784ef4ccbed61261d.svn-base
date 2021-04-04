@@ -1,0 +1,66 @@
+package kr.or.ddit.projects.scm.service.impl;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.internal.io.dav.DAVRepository;
+
+import kr.or.ddit.projects.scm.dao.SvnDAO;
+import kr.or.ddit.projects.scm.service.SvnService;
+import kr.or.ddit.projects.scm.vo.ScmVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Service
+public class SvnServiceImpl implements SvnService{
+
+	@Inject
+	SvnDAO svnDAO;
+	
+	@Override
+	public List<ScmVO> retrieveSvnLogList(PagingVO<ScmVO> pagingVO) throws SVNException, ParseException {
+		return svnDAO.selectSvnLogList(pagingVO);
+	}
+
+	@Override
+	public DAVRepository getConnectDAVRepository(ScmVO scmVO) throws SVNException {
+		return svnDAO.getConnectDAVRepository(scmVO);
+	}
+
+	@Override
+	public Set<String> retrieveProviderSet(ScmVO scmVO) throws SVNException, ParseException {
+		return svnDAO.selectProviderSet(scmVO);
+	}
+
+	@Override
+	public Map<String, Integer> retrieveByProviderToChartMap(ScmVO scmVO) throws SVNException, ParseException {
+		return svnDAO.selectByProviderToChartMap(scmVO);
+	}
+
+	@Override
+	public Map<Integer, Integer> retrieveByMonthToChartMap(ScmVO scmVO) throws SVNException, ParseException {
+		return svnDAO.selectByMonthToChartMap(scmVO);
+	}
+
+	@Override
+	public List<Long> retrieveStartRowRevisionList(PagingVO<ScmVO> pagingVO) throws SVNException {
+		return svnDAO.selectStartRowRevisionList(pagingVO);
+	}
+	
+	@Override
+	public long getTotalRecord() {
+		return svnDAO.getTotalRecord();
+	}
+}

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.commons.dao.CustomInfoDAO">
+	
+	<insert id="insertCustomInfo" parameterType="kr.or.ddit.vo.CustomInfoVO">
+		<selectKey keyProperty="customNo" order="BEFORE" resultType="int">
+			SELECT NVL(MAX(CUSTOM_NO), 0) + 1
+			  FROM CUSTOM_INFO
+		</selectKey>
+		INSERT INTO CUSTOM_INFO(
+			CUSTOM_NO
+			, GROUP_CODE
+			, TEXT
+			, ICON_CLASS
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(textColor)">
+			, TEXT_COLOR
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(iconColor)">
+			, ICON_COLOR
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(backgroundColor)">
+			, BACKGROUND_COLOR
+			</if>
+		) VALUES (
+			#{customNo, jdbcType=NUMERIC}
+			, #{groupCode, jdbcType=VARCHAR}
+			, #{text, jdbcType=VARCHAR}
+			, #{iconClass, jdbcType=VARCHAR}
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(textColor)">
+			, #{textColor}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(iconColor)">
+			, #{iconColor}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(backgroundColor)">
+			, #{backgroundColor}
+			</if>
+		)
+	</insert>
+	
+	<update id="updateCustomInfo" parameterType="kr.or.ddit.vo.CustomInfoVO">
+		UPDATE CUSTOM_INFO
+		   SET TEXT = #{text}
+			 , ICON_CLASS = #{iconClass}
+			 , TEXT_COLOR = #{textColor}
+			 , ICON_COLOR = #{iconColor}
+			 , BACKGROUND_COLOR = #{backgroundColor}
+		 WHERE CUSTOM_NO = ${customNo}
+	</update>
+	
+	<delete id="deleteCustomInfo" parameterType="kr.or.ddit.vo.CustomInfoVO">
+		DELETE 
+		  FROM CUSTOM_INFO
+ 		 WHERE CUSTOM_NO = ${customNo}
+	</delete>
+	
+	<select id="selectCustomInfo" parameterType="kr.or.ddit.vo.CustomInfoVO" resultType="kr.or.ddit.vo.CustomInfoVO">
+		SELECT CUSTOM_NO
+			 , A.GROUP_CODE
+			 , A.TEXT
+			 , ICON_CLASS
+			 , TEXT_COLOR
+			 , ICON_COLOR
+			 , BACKGROUND_COLOR
+			 , B.CODE
+ 	 	  FROM CUSTOM_INFO A INNER JOIN CODE B ON (A.TEXT = B.CODE_NAME AND A.GROUP_CODE = B.GROUP_CODE)
+ 	 	 WHERE CUSTOM_NO = ${customNo}
+	</select>
+	
+	<select id="selectCustomInfoList" parameterType="kr.or.ddit.vo.CustomInfoVO" resultType="kr.or.ddit.vo.CustomInfoVO">
+		SELECT CUSTOM_NO
+			 , A.GROUP_CODE
+			 , A.TEXT
+			 , ICON_CLASS
+			 , TEXT_COLOR
+			 , ICON_COLOR
+			 , BACKGROUND_COLOR
+			 , B.CODE
+ 	 	  FROM CUSTOM_INFO A INNER JOIN CODE B ON (A.TEXT = B.CODE_NAME AND A.GROUP_CODE = B.GROUP_CODE)
+ 	 	 WHERE A.GROUP_CODE = #{groupCode}
+ 	  ORDER BY CUSTOM_NO
+	</select>
+	
+	<sql id="countFrag">
+		<where>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(groupCode)">
+				<if test="'IT'.equals(groupCode)">
+					ISSUE_TYPE = #{text}
+				</if>
+				<if test="'IR'.equals(groupCode)">
+					ISSUE_RANK = #{text}
+				</if>
+				<if test="'IS'.equals(groupCode)">
+					ISSUE_STATE = #{text}
+				</if>
+				<if test="'WT'.equals(groupCode)">
+					WORK_TYPE = #{text}
+				</if>
+				<if test="'WR'.equals(groupCode)">
+					WORK_RANK = #{text}
+				</if>
+				<if test="'WS'.equals(groupCode)">
+					WORK_STATE = #{text}
+				</if>
+			</if>
+		</where>
+	</sql>
+	
+	<select id="existCountToIssue" parameterType="kr.or.ddit.vo.CustomInfoVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM ISSUE
+		 <include refid="countFrag"></include>
+	</select>
+	
+	<select id="existCountToWork" parameterType="kr.or.ddit.vo.CustomInfoVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM WORK
+		 <include refid="countFrag"></include>
+	</select>
+	
+	<select id="selectIssueCustomInfoList" resultType="kr.or.ddit.vo.CustomInfoVO">
+		SELECT *
+		  FROM CUSTOM_INFO
+		 WHERE GROUP_CODE LIKE 'I%'
+	</select>
+	
+	<select id="selectWorkCustomInfoList" resultType="kr.or.ddit.vo.CustomInfoVO">
+		SELECT *
+		  FROM CUSTOM_INFO
+		 WHERE GROUP_CODE LIKE 'W%'
+	</select>	
+
+
+	
+</mapper>

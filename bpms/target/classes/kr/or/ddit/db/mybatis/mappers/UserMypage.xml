@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.member.dao.UserMemberDAO">
+	
+	<select id="selectMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.member.vo.MemberVO">
+		SELECT  MEM_IMG
+			  , MEM_ID
+			  , MEM_NAME
+			  , MEM_MAIL
+			  , CREATE_DATE
+		  FROM MEMBER
+		 WHERE MEM_ID = #{memId}
+	</select>
+	
+	<select id="selectWorkListByMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		SELECT BB.*
+		  FROM(
+		    SELECT AA.*, ROWNUM RNUM
+		      FROM(
+		        SELECT BOARD_TITLE
+		             , BOARD_WRITER
+		             , BOARD_SHOW
+		             , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		             , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		             , PRO_ID
+		             , WORK_ID
+		             , WORK_RANK
+		             , WORK_TYPE
+		             , WORK_STATE
+		             , WORK_SHOW
+		             , TO_CHAR(W.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		             , TO_CHAR(W.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		             , PROGRESS
+		             , WORK_DIRECTOR
+		          FROM BOARD B INNER JOIN WORK W ON (B.BOARD_NO = W.WORK_ID)
+		         WHERE B.BOARD_WRITER = #{memId}
+		           AND W.WORK_SHOW = 'Y'
+		        ORDER BY B.CREATE_DATE DESC) AA
+		    ) BB
+		<![CDATA[
+		WHERE RNUM < 6
+		]]>
+	</select>
+	
+	<select id="selectIssueListByMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.issue.vo.IssueVO">
+		SELECT BB.*
+		  FROM(
+		    SELECT AA.*, ROWNUM RNUM
+		      FROM (
+		        SELECT B.BOARD_TITLE
+		             , B.BOARD_WRITER
+		             , B.BOARD_SHOW
+		             , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		             , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		             , B.PRO_ID
+		             , I.ISSUE_ID
+		             , I.ISSUE_SHOW
+		             , I.ISSUE_RANK
+		             , I.ISSUE_TYPE
+		             , I.ISSUE_STATE
+		             , TO_CHAR(I.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		             , TO_CHAR(I.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		             , I.ISSUE_DIRECTOR
+		          FROM BOARD B INNER JOIN ISSUE I ON (B.BOARD_NO = I.ISSUE_ID)
+		         WHERE B.BOARD_WRITER = #{memId}
+		           AND I.ISSUE_SHOW = 'Y'
+		        ORDER BY START_DATE DESC) AA 
+		    ) BB
+		<![CDATA[
+		WHERE RNUM < 6
+		]]>
+	</select>
+	
+	<update id="updateMemberImg" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		UPDATE MEMBER
+		SET
+		   MEM_IMG = #{memImg,jdbcType=VARCHAR}
+        WHERE MEM_ID = #{memId}
+	</update>
+</mapper>
+
+
+
+
+
+
+
+

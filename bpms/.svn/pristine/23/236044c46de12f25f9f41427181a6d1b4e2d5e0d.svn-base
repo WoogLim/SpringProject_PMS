@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+	<!-- 김근호(TA) Tiles -->
+	<definition name="parent" template="/WEB-INF/views/template.jsp">
+  	<put-attribute name="preScript" value="/includee/preScript.jsp"/>
+  	<put-attribute name="logo" value="/includee/logo.jsp"/>
+  	<put-attribute name="topMenu" value="/includee/topMenu.jsp"/>
+  	<put-attribute name="leftMenu" value="/includee/leftMenu.jsp"/>
+  	<put-attribute name="endScript" value="/includee/endScript.jsp"/>
+  </definition>
+	
+	<definition name="index" extends="parent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/index.jsp" />
+	</definition>
+	<definition name="board/projectnotice/*" extends="parent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/board/projectnotice/{1}.jsp" />
+	</definition>
+	<definition name="schedule/*" extends="parent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/schedule/{1}.jsp" />
+	</definition>
+
+	<!-- <definition name="bts/*" extends="parent"> -->
+	<!-- <put-attribute name="contents" value="/WEB-INF/views/bts/{1}.jsp" /> -->
+	<!-- </definition> -->
+	<!-- <definition name="model1/**" extends="parent"> -->
+	<!-- <put-attribute name="contents" value="/{1}" /> -->
+	<!-- </definition> -->
+</tiles-definitions>

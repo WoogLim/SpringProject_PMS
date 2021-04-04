@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.storage.dao.StorageDAO">
+
+	<resultMap type="kr.or.ddit.projects.storage.vo.StorageVO" id="StorageMap" autoMapping="true">
+		<id property="proId" column="PRO_ID"/>
+		<collection property="attatchList" ofType="kr.or.ddit.projects.file.vo.AttatchVO" autoMapping="true">
+			<id property="attNo" column="ATT_NO"/>
+		</collection>
+	</resultMap>
+
+	<select id="retrievProjectFiles" parameterType="kr.or.ddit.projects.storage.vo.StorageVO" resultMap="StorageMap">
+		SELECT B.PRO_ID PRO_ID,
+		       F.ATT_NO,
+		       F. ATT_ORIGINNAME,
+		       F.ATT_SAVENAME,
+		       F.ATT_MIME,
+		       F.ATT_FILESIZE,
+		       F.ATT_FANCY,
+		       F.ATT_DOWNCOUNT,
+		       F.ATT_NO
+		  FROM ATTATCH F LEFT JOIN BOARD B ON(F.BOARD_NO = B.BOARD_NO)
+		 WHERE B.PRO_ID = #{proId}
+		   AND B.GROUP_CODE = #{groupCode}
+		   AND B.CODE = TO_NUMBER(#{typeCode})
+         ORDER BY B.CREATE_DATE DESC
+	</select>
+
+</mapper>

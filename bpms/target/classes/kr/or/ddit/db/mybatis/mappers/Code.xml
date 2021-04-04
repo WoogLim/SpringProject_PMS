@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.commons.dao.CodeDAO">
+	
+	<select id="selectCodeListByGroupCode" parameterType="kr.or.ddit.vo.CodeVO" resultType="kr.or.ddit.vo.CodeVO">
+		SELECT GROUP_CODE
+		     , CODE
+		     , GROUP_NAME
+		     , CODE_NAME
+		     , TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		  FROM CODE
+		 WHERE GROUP_CODE = #{groupCode}
+	</select>
+	
+	<select id="selectCodeList">
+		SELECT GROUP_CODE
+		     , CODE
+		     , GROUP_NAME
+		     , CODE_NAME
+		     , TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		  FROM CODE
+	</select>
+	
+	<select id="selectCode" parameterType="kr.or.ddit.vo.CodeVO" resultType="kr.or.ddit.vo.CodeVO">
+		SELECT GROUP_CODE
+		     , CODE
+		     , GROUP_NAME
+		     , CODE_NAME
+		     , TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		  FROM CODE
+		 WHERE GROUP_CODE = #{groupCode}
+		   AND CODE = ${code}
+	</select>
+
+	<insert id="insertCode" parameterType="kr.or.ddit.vo.CodeVO">
+		<selectKey keyProperty="code" order="BEFORE" resultType="int">
+			SELECT NVL(MAX(CODE), 0) + 1
+			  FROM CODE
+			 WHERE GROUP_CODE = #{groupCode}
+		</selectKey>
+		INSERT INTO CODE(
+			GROUP_CODE
+			, CODE
+			, GROUP_NAME
+			, CODE_NAME
+			, CREATE_DATE
+		) VALUES (
+			#{groupCode, jdbcType=VARCHAR}
+			, #{code, jdbcType=NUMERIC}
+			, #{groupName, jdbcType=VARCHAR}
+			, #{codeName, jdbcType=VARCHAR}
+			, SYSDATE
+		)	
+	</insert>
+	
+	<update id="updateCode" parameterType="kr.or.ddit.vo.CodeVO">
+		UPDATE CODE
+		   SET CODE_NAME = #{codeName}
+		 WHERE GROUP_CODE = #{groupCode}
+		   AND CODE = #{code}	
+	</update>
+	
+	<delete id="deleteCode" parameterType="kr.or.ddit.vo.CodeVO">
+		DELETE 
+		  FROM CODE
+         WHERE GROUP_CODE = #{groupCode}
+      	   AND CODE = #{code}
+	</delete>
+
+
+</mapper>

@@ -1,0 +1,6 @@
+package kr.or.ddit.enumpkg;
+
+public enum ServiceResult {
+	OK, FAILED, NOTEXIST, INVALIDPASSWORD, PKDUPLICATED
+	, DISABLE, INUSE, EXIST_PARENT_ROLE, EXIST_ASSIGNED_RESOURCE
+}

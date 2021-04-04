@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+	<!-- 신광진(PL) Tiles -->
+	<definition name="adminParent" template="/WEB-INF/views/template.jsp">
+		<put-attribute name="preScript" value="/includee/preScript.jsp" />
+		<put-attribute name="logo" value="/includee/adminLogo.jsp" />
+		<put-attribute name="topMenu" value="/includee/adminTopMenu.jsp" />
+		<put-attribute name="leftMenu" value="/includee/adminLeftMenu.jsp" />
+		<put-attribute name="endScript" value="/includee/endScript.jsp" />
+		<put-attribute name="navScript" value="/includee/adminNavScript.jsp"/>
+		<put-attribute name="message" value="/WEB-INF/views/project/chat/chatView.jsp" />
+	</definition>
+	
+	<definition name="index" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/index.jsp" />
+	</definition>
+
+	<definition name="admin/project/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/project/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/serverNotice/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/board/servernotice/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/member/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/member/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/work/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/work/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/issue/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/issue/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/role/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/role/{1}.jsp" />
+	</definition>
+
+	<definition name="admin/dashBoard/*" extends="adminParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/admin/dashBoard/{1}.jsp" />
+	</definition>
+
+	<!-- DASH BOARD -->
+	<definition name="project/main/*" extends="parent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/main/{1}.jsp" />
+	</definition>
+
+	<!-- REQUEST FORM -->
+	<definition name="project/manage/*" extends="userMainParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/manage/{1}.jsp" />
+	</definition>
+
+
+
+
+
+
+
+	<!-- <definition name="bts/*" extends="parent"> -->
+	<!-- <put-attribute name="contents" value="/WEB-INF/views/bts/{1}.jsp" /> -->
+	<!-- </definition> -->
+	<!-- <definition name="model1/**" extends="parent"> -->
+	<!-- <put-attribute name="contents" value="/{1}" /> -->
+	<!-- </definition> -->
+</tiles-definitions>

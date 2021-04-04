@@ -1,0 +1,67 @@
+package kr.or.ddit.projects.scm.controller;
+
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.tmatesoft.svn.core.SVNException;
+
+import kr.or.ddit.projects.scm.service.SvnService;
+import kr.or.ddit.projects.scm.vo.ScmVO;
+import kr.or.ddit.vo.PagingVO;
+
+@Controller
+public class SvnController {
+
+	@Inject
+	private SvnService svnService;
+	
+	@RequestMapping("/scm/scmView.do")
+	public String logView(
+		@RequestParam(value="page", required=true, defaultValue="1")int currentPage
+		, ScmVO scmVO
+		, Model model
+	) throws SVNException, ParseException {
+		PagingVO<ScmVO> pagingVO = new PagingVO<>();
+		pagingVO.setSearchDetail(scmVO);
+		pagingVO.setCurrentPage(currentPage);
+		
+		List<Long> startRowRevisionList = svnService.retrieveStartRowRevisionList(pagingVO);
+		pagingVO.getSearchDetail().setStartRowRevisionList(startRowRevisionList);
+		
+		List<ScmVO> logList = svnService.retrieveSvnLogList(pagingVO);
+		pagingVO.setDataList(logList);
+		
+		long totalRecord = svnService.getTotalRecord();
+		pagingVO.setTotalRecord((int)totalRecord);
+	
+		Set<String> providerList = svnService.retrieveProviderSet(scmVO);
+		
+		model.addAttribute("providerList", providerList);
+		model.addAttribute("pagingVO", pagingVO);
+		return "scm/scmView";
+	}
+	
+	@RequestMapping("/scm/scmChart.do")
+	public String graphView(ScmVO scmVO, Model model) throws SVNException, ParseException {
+		Map<String, Integer> providerChartMap = svnService.retrieveByProviderToChartMap(scmVO);
+		Map<Integer, Integer> monthChartMap = svnService.retrieveByMonthToChartMap(scmVO);
+	
+		model.addAttribute("scmVO", scmVO);
+		model.addAttribute("providerChartMap", providerChartMap);
+		model.addAttribute("monthChartMap", monthChartMap);
+		return "scm/scmAuthorView";
+	}
+	
+	@RequestMapping("/scm/scmForm.do")
+	public String scmForm() {
+		return "scm/scmRegist";
+	}
+}

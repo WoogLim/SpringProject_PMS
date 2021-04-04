@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.issue.dao.AdminIssueDAO">
+	
+	<sql id="searchDetailFrag">
+		<trim prefix=" WHERE " prefixOverrides="AND">
+			<if test="searchDetail != null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.issueRank)">
+					AND ISSUE_RANK = #{searchDetail.issueRank}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.issueType)">
+					AND ISSUE_TYPE = #{searchDetail.issueType}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.issueState)">
+					AND ISSUE_STATE = #{searchDetail.issueState}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.proId)">
+					AND PRO_ID = #{searchDetail.proId}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.issueDirector)">
+					AND ISSUE_DIRECTOR = #{searchDetail.issueDirector}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.boardWriter)">
+					AND BOARD_WRITER = #{searchDetail.issueDirector}
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<sql id="dateSortFrag">
+		<if test="sortVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(sortVO.sortType)">
+			<choose>
+				<when test="'date'.equals(sortVO.sortCondition) and 'DESC'.equals(sortVO.sortType)">
+					ORDER BY B.CREATE_DATE DESC
+				</when>
+				<otherwise>
+					ORDER BY B.CREATE_DATE
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="selectIssueCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM ISSUE I INNER JOIN BOARD B ON (I.ISSUE_ID = B.BOARD_NO)
+		<include refid="searchDetailFrag"></include>
+		<include refid="dateSortFrag"></include>
+	</select>
+	
+	<select id="selectIssueList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.issue.vo.IssueVO">
+		SELECT BB.*
+		  FROM(
+		    SELECT AA.*, ROWNUM RNUM
+		      FROM(
+		        SELECT B.BOARD_NO
+		             , B.BOARD_TITLE
+		             , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		             , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		             , B.BOARD_CONTENT
+		             , B.BOARD_WRITER
+		             , B.BOARD_SHOW
+		             , B.PRO_ID
+		             , B.GROUP_CODE
+		             , B.CODE
+		             
+		             , I.ISSUE_ID
+		             , I.ISSUE_RANK
+		             , I.ISSUE_TYPE
+		             , I.ISSUE_STATE
+		             , I.ISSUE_SHOW
+		             , TO_CHAR(I.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		             , TO_CHAR(I.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		             , I.PROGRESS
+		             , I.ISSUE_DIRECTOR
+		             , I.WORK_ID
+		             
+		             , M.MEM_NAME
+		          FROM BOARD B INNER JOIN ISSUE I ON (B.BOARD_NO = I.ISSUE_ID)
+		          			   LEFT OUTER JOIN MEMBER M ON (I.ISSUE_DIRECTOR = M.MEM_ID)
+				<include refid="searchDetailFrag"></include>
+				<include refid="dateSortFrag"></include>
+		        ) AA
+		    ) BB
+		WHERE RNUM BETWEEN ${startRow} AND ${endRow}
+	</select>
+	
+	<select id="selectIssueListByMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.issue.vo.IssueVO">
+		SELECT BB.*
+		  FROM(
+		    SELECT AA.*, ROWNUM RNUM
+		      FROM (
+		        SELECT B.BOARD_TITLE
+		             , B.BOARD_WRITER
+		             , B.BOARD_SHOW
+		             , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		             , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		             , B.PRO_ID
+		             , I.ISSUE_ID
+		             , I.ISSUE_SHOW
+		             , I.ISSUE_RANK
+		             , I.ISSUE_TYPE
+		             , I.ISSUE_STATE
+		             , TO_CHAR(I.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		             , TO_CHAR(I.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		             , I.ISSUE_DIRECTOR
+		          FROM BOARD B INNER JOIN ISSUE I ON (B.BOARD_NO = I.ISSUE_ID)
+		         WHERE B.BOARD_WRITER = #{memId}
+		           AND I.ISSUE_SHOW = 'Y'
+		        ORDER BY START_DATE DESC) AA 
+		    ) BB
+		<![CDATA[
+		WHERE RNUM < 6
+		]]>
+	</select>
+	
+	<sql id="writerAndDirectorSearchFrag">
+		<trim prefix=" WHERE " prefixOverrides="AND">
+			<if test="searchDetail != null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.proId)">
+					AND PRO_ID = #{searchDetail.proId}
+				</if>
+			</if>
+		</trim>
+	</sql>
+	<select id="selectIssueDirectorList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.issue.vo.IssueVO">
+		SELECT DISTINCT I.ISSUE_DIRECTOR, M.MEM_NAME
+		  FROM ISSUE I INNER JOIN BOARD B ON (I.ISSUE_ID = B.BOARD_NO)
+		  			   INNER JOIN MEMBER M ON (I.ISSUE_DIRECTOR = M.MEM_ID)
+		 <include refid="writerAndDirectorSearchFrag"></include>
+	</select>
+	
+	<select id="selectBoardWriterList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.issue.vo.IssueVO">
+		SELECT DISTINCT B.BOARD_WRITER, M.MEM_NAME
+		  FROM ISSUE I INNER JOIN BOARD B ON (I.ISSUE_ID = B.BOARD_NO)
+		  			   INNER JOIN MEMBER M ON (B.BOARD_WRITER = M.MEM_ID)
+		 <include refid="writerAndDirectorSearchFrag"></include>
+	</select>
+	
+</mapper>

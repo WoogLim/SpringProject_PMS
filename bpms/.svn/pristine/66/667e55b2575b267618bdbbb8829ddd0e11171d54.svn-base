@@ -1,0 +1,80 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib prefix="security" uri="http://www.springframework.org/security/tags"%>
+<security:authorize access="isAuthenticated()">
+	<security:authentication property="principal" var="principal" />
+	<c:set var="authMember" value="${principal.realMember }" />
+	<div class="panel-header">
+		<div class="page-inner">
+			<br>
+			<div class="issue-header clearfix">
+				<div class="float-left">
+					<h1 class="fw-mediumbold" style="padding-left: 10px">
+						${boardVO.boardTitle}</h1>
+				</div>
+				<button class="btn btn-success float-right d-flex" id="listBtn" onclick="location.href='${cPath }/serverNotice/serverNoticeList.do?proId=${param.proId }'">
+					<i class="fas fa-list">목록</i>
+				</button>
+			</div>
+			<br><br>
+			<hr style="border-bottom: 2px solid black;">
+			<div class="issue-body clearfix">
+				<div class="float-left">
+					<h4 class="fw-mediumbold" style="padding-left: 30px;">${boardVO.boardWriter}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${boardVO.createDate }</h4>
+				</div>
+				<br>
+				<hr style="border-bottom: 1px solid black;">
+				<div class="float-left" style="display : flex">
+					<br>
+					<c:if test="${not empty boardVO.attatchList }">
+						<c:forEach items="${boardVO.attatchList }" var="attatch"
+							varStatus="vs">
+							<c:url value="/board/download.do" var="downloadURL">
+								<c:param name="attNo" value="${attatch.attNo }" />
+							</c:url>
+							<a href="${downloadURL }">
+								<h5 style="padding-left: 30px; color: black">
+									<i class="fas fa-file" style="margin-right: 12px"></i>${attatch.attOriginname }
+								</h5>
+							</a>
+						</c:forEach>
+					</c:if>
+					<c:if test="${empty boardVO.attatchList }">
+						<h5 style="padding-left: 30px">첨부파일이 존재하지 않습니다.</h5>
+					</c:if>
+					<br><br>
+				</div>
+				<br>
+				<hr>
+				<div class="float-left">
+					<h4 style="padding-left: 30px">${boardVO.boardContent }</h4>
+				</div>
+			</div>
+			<br>
+			<hr>
+			<c:if test = "${authMember.memName eq boardVO.boardWriter }">
+				<div class="issue-footer clearfix">
+					<div class="float-right">
+						<c:url value="/serverNotice/serverNoticeUpdate.do" var="updateURL">
+							<c:param name="boardNo" value="${boardVO.boardNo }" />
+							<c:param name="proId" value="${param.proId }" />
+						</c:url>
+							<a class="btn btn-primary" href="${updateURL }">수정</a> 
+							<input type="button" value="삭제" class="btn btn-danger" id="removeBtn" />
+					</div>
+				</div>
+			</c:if>
+		</div>
+	</div>
+	<form id="deleteForm" method="post" action="${cPath }/serverNotice/serverNoticeDelete.do?proId=${param.proId}">
+		<input type="hidden" name="boardNo" value="${boardVO.boardNo }" />
+	</form>
+</security:authorize>
+<script>
+	let deleteForm = $("#deleteForm");
+	let removeBtn = $("#removeBtn").on("click", function(){
+		deleteForm.submit();
+	});
+</script>

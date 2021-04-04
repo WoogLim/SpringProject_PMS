@@ -1,0 +1,10 @@
+package kr.or.ddit.projects.scm.service.impl;
+
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.projects.scm.service.ScmService;
+
+@Service
+public class ScmServiceImpl implements ScmService {
+
+}

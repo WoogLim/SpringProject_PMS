@@ -1,0 +1,34 @@
+package kr.or.ddit.projects.member.vo;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+
+public class MemberWrapper extends User {
+
+	private static Collection<GrantedAuthority> makeAuthorities(List<String> authority) {
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		for (String role : authority) {
+			authorities.add(new SimpleGrantedAuthority(role));
+		}
+		return authorities;
+	}
+
+	public MemberWrapper(MemberVO realMember) {
+		super(realMember.getMemId(), realMember.getMemPass(), !"Y".equals(realMember.getMemDelete()),
+				!"Y".equals(realMember.getMemDelete()), !"Y".equals(realMember.getMemDelete()),
+				!"Y".equals(realMember.getMemDelete()), makeAuthorities(realMember.getAuthorities()));
+		this.realMember = realMember;
+	}
+
+	private MemberVO realMember;
+
+	public MemberVO getRealMember() {
+		return realMember;
+	}
+}

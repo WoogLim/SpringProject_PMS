@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+	<definition name="userMainParent" template="/WEB-INF/views/template-main.jsp">
+		<put-attribute name="preScript" value="/includee/userMainPreScript.jsp" />
+		<put-attribute name="topMenu" value="/includee/userMainTopMenu.jsp" />
+		<put-attribute name="message" value="/WEB-INF/views/project/chat/chatView.jsp" />
+		<put-attribute name="endScript" value="/includee/userMainEndScript.jsp" />
+	</definition>
+
+	<definition name="main/**" extends="userMainParent">
+		<put-attribute name="contents"
+			value="/WEB-INF/views/project/main/{1}.jsp" />
+	</definition>
+	
+	
+</tiles-definitions>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.member.dao.AdminMemberDAO">
+	
+	<sql id="searchDetailFrag">
+		<if test="searchDetail!=null">
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.memAlive)">
+				AND MEM_ALIVE = #{searchDetail.memAlive}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.adminRole)">
+				AND ADMIN_ROLE = #{searchDetail.adminRole}
+			</if>
+		</if>
+	</sql>
+	
+	<sql id="searchVOFrag">
+		<if test="searchVO != null and @org.apache.commons.lang3.StringUtils@isNotBlank(searchVO.searchWord)">
+			<if test="'memName'.equals(searchVO.searchType)">
+				AND INSTR(MEM_NAME, #{searchVO.searchWord}) > 0
+			</if>
+		</if>
+	</sql>
+	
+	<sql id="dateSortFrag">
+		<if test="sortVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(sortVO.sortType)">
+			<choose>
+				<when test="'date'.equals(sortVO.sortCondition) and 'DESC'.equals(sortVO.sortType)">
+					ORDER BY CREATE_DATE DESC
+				</when>
+				<otherwise>
+					ORDER BY CREATE_DATE
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+
+	<select id="duplicationCheckForMemId" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.member.vo.MemberVO">
+		SELECT *
+		  FROM MEMBER
+		 WHERE MEM_ID = #{memId} 
+	</select>
+
+	<select id="selectMemberCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM MEMBER
+		 WHERE MEM_DELETE = 'N'
+		<include refid="searchDetailFrag"></include>
+		<include refid="searchVOFrag"></include>
+	</select>
+	
+	<select id="selectProMemberCount" parameterType="kr.or.ddit.projects.project.vo.ProjectVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM PROJECT_MEMBER
+		 WHERE PRO_ID = #{proId}
+	</select>
+	
+	<select id="selectMemberList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.member.vo.MemberVO">
+		SELECT B.*
+		  FROM(
+		      SELECT A.*, ROWNUM RNUM
+		        FROM(
+		          SELECT MEM_IMG
+		          	   , MEM_ID
+		               , MEM_PASS
+		               , MEM_NAME
+		               , MEM_MAIL
+		               , MEM_HP
+		               , TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		               , TO_CHAR(MODIFY_DATE, 'YYYY-MM-DD') MODIFY_DATE
+		               , MEM_ALIVE
+		               , MEM_DELETE
+		               , ADMIN_ROLE
+		            FROM MEMBER
+		           WHERE MEM_DELETE = 'N'
+		          <include refid="searchDetailFrag"></include>
+		          <include refid="searchVOFrag"></include>
+		          <include refid="dateSortFrag"></include>
+		      ) A
+		  ) B
+		 WHERE RNUM BETWEEN #{startRow} AND #{endRow}
+	</select>
+	
+	<resultMap type="kr.or.ddit.projects.member.vo.MemberVO" id="selectMemberMap" autoMapping="true">
+		<id column="MEM_ID" property="memId"/>
+		<collection property="projectList" javaType="java.util.List" ofType="kr.or.ddit.projects.project.vo.ProjectVO" autoMapping="true">
+			<id property="proId" column="PRO_ID"/>
+		</collection>
+	</resultMap>
+	<select id="selectMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultMap="selectMemberMap">
+		WITH ISSUE_CNT_QUERY AS(
+		    SELECT PRO_ID, COUNT(*) ISSUE_CNT
+		      FROM BOARD B
+		     WHERE BOARD_WRITER = #{memId}
+		       AND GROUP_CODE = 'B'
+		       AND CODE = 1
+		    GROUP BY PRO_ID
+		)
+		, WORK_CNT_QUERY AS(
+		    SELECT PRO_ID, COUNT(*) WORK_CNT
+		      FROM BOARD B
+		     WHERE BOARD_WRITER = #{memId}
+		       AND GROUP_CODE = 'B'
+		       AND CODE = 2
+		    GROUP BY PRO_ID
+		)
+		SELECT M.MEM_IMG
+		     , M.MEM_ID
+		     , M.MEM_NAME
+		     , M.MEM_MAIL
+		     , M.MEM_HP
+		     , TO_CHAR(M.CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		     , TO_CHAR(M.MODIFY_DATE, 'YYYY-MM-DD') MODIFY_DATE
+		     , M.MEM_ALIVE
+		     , M.MEM_DELETE
+		     , M.ADMIN_ROLE
+		     
+		     , P.PROJECT_MANAGER
+		     , P.PRO_MEMCOUNT
+		     , P.PRO_ID
+		     , P.PRO_NAME
+		     , P.PRO_CONTENT
+		     , P.PRO_SHOW
+		     , TO_CHAR(P.CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		     , TO_CHAR(P.MODIFY_DATE, 'YYYY-MM-DD') MODIFY_DATE
+		     , TO_CHAR(P.END_DATE, 'YYYY-MM-DD') END_DATE
+		     , P.GROUP_CODE
+		     , P.CODE
+		     , P.PRO_PARENT
+		     
+		     , ICQ.ISSUE_CNT
+		     , WCQ.WORK_CNT    
+		  FROM PROJECT P LEFT OUTER JOIN ISSUE_CNT_QUERY ICQ ON (P.PRO_ID = ICQ.PRO_ID)
+                 LEFT OUTER JOIN WORK_CNT_QUERY WCQ ON (P.PRO_ID = WCQ.PRO_ID)
+                 LEFT OUTER JOIN PROJECT_MEMBER PM ON (P.PRO_ID = PM.PRO_ID)
+                 RIGHT OUTER JOIN MEMBER M ON (M.MEM_ID = PM.MEM_ID)
+		  WHERE M.MEM_ID = #{memId}
+	</select>
+	
+	<resultMap type="kr.or.ddit.projects.member.vo.MemberVO" id="memberAuthMap" autoMapping="true">
+		<id column="MEM_ID" property="memId"/>
+		<collection property="authorities" javaType="java.util.List" ofType="kr.or.ddit.security.vo.AuthorityVO">
+			<result column="PRO_ID" property="proId"/>
+			<result column="AUTHORITY" property="authority"/>
+		</collection>
+		<collection property="projectList" javaType="java.util.List" ofType="kr.or.ddit.projects.project.vo.ProjectVO">
+			<id column="PRO_ID" property="proId"/>
+			<result column="PRO_NAME" property="proName"/>
+		</collection>
+	</resultMap>
+	<select id="selectMemberByUserName" parameterType="String" resultMap="memberAuthMap">
+		SELECT M.MEM_IMG
+		     , M.MEM_ID
+		     , M.MEM_PASS
+		     , M.MEM_NAME
+		     , M.MEM_MAIL
+		     , M.MEM_HP
+		     , TO_CHAR(M.CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		     , TO_CHAR(M.MODIFY_DATE, 'YYYY-MM-DD') MODIFY_DATE
+		     , M.MEM_ALIVE
+		     , M.MEM_DELETE
+		     , M.MEM_ROLE
+		     , M.ADMIN_ROLE
+		     
+		     , PM.PRO_ID
+		     , PM.AUTHORITY
+		     
+		     , P.PRO_NAME
+		  FROM MEMBER M LEFT OUTER JOIN PROJECT_MEMBER PM ON (M.MEM_ID = PM.MEM_ID)
+		  				INNER JOIN PROJECT P ON (P.PRO_ID = PM.PRO_ID)
+		 WHERE M.MEM_ID = #{memId}
+	</select>
+	
+	<insert id="insertMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		INSERT INTO MEMBER (
+		    MEM_IMG ,MEM_ID
+		    ,MEM_PASS ,MEM_NAME
+		    ,MEM_MAIL ,MEM_HP
+		    ,CREATE_DATE ,MODIFY_DATE
+		    ,MEM_ALIVE ,MEM_DELETE
+		    ,ADMIN_ROLE
+		) VALUES (
+		    #{memImg, jdbcType=VARCHAR}, #{memId, jdbcType=VARCHAR}
+		    , #{memPass, jdbcType=VARCHAR}, #{memName, jdbcType=VARCHAR}
+		    , #{memMail, jdbcType=VARCHAR}, #{memHp, jdbcType=VARCHAR}
+		    , SYSDATE, #{modifyDate, jdbcType=DATE}
+		    , 'Y', 'N'
+		    , 'N'
+		)
+	</insert>
+	
+	<update id="changeLockStatus" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		UPDATE MEMBER
+		   SET MEM_ALIVE = #{memAlive}
+		<if test="'Y'.equals(memberVO.memAlive)">
+		     , MEM_ROLE = 'ROLE_USER'
+		</if>
+		<if test="'N'.equals(memberVO.memAlive)">
+		     , MEM_ROLE = 'ROLE_RESTRICTED'
+		</if>
+		 WHERE MEM_ID = #{memId}
+	</update>
+
+	<update id="deleteMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		UPDATE MEMBER
+		   SET MEM_DELETE = 'Y'
+		 WHERE MEM_ID = #{memId}
+	</update>
+	
+	<delete id="deleteProMember" parameterType="kr.or.ddit.projects.project.vo.ProjectVO">
+		DELETE
+		  FROM PROJECT_MEMBER
+		 WHERE PRO_ID = #{proId}
+	</delete>
+	
+	<update id="updateMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		UPDATE MEMBER
+		   SET MEM_NAME = #{memName}
+			 , MEM_MAIL = #{memMail}
+			 , MEM_HP = #{memHp}
+			 , MODIFY_DATE = SYSDATE
+			 , MEM_ALIVE = #{memAlive}
+			 , ADMIN_ROLE = #{adminRole}
+		 WHERE MEM_ID = #{memId} 
+	</update>
+	
+	<update id="initPassword" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		UPDATE MEMBER
+		   SET MEM_PASS = #{memPass}
+		     , MODIFY_DATE = SYSDATE
+		 WHERE MEM_ID = #{memId}
+	</update>
+
+	<select id="selectMemberListForMain" resultType="kr.or.ddit.projects.member.vo.MemberVO">
+		SELECT A.*
+		  FROM(
+		    SELECT MEM_IMG
+		         , MEM_ID
+		         , MEM_PASS
+		         , MEM_NAME
+		         , MEM_MAIL
+		         , MEM_HP
+		         , TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') CREATE_DATE
+		         , TO_CHAR(MODIFY_DATE, 'YYYY-MM-DD') MODIFY_DATE
+		         , MEM_ALIVE
+		         , MEM_DELETE
+		         , ADMIN_ROLE
+		         , ROWNUM RNUM
+		      FROM MEMBER
+		     WHERE MEM_DELETE = 'N'
+		    ORDER BY CREATE_DATE DESC
+		    ) A
+		WHERE RNUM BETWEEN 1 AND 5
+	</select>
+
+	<!-- proMember관련 SQL -->
+	<insert id="insertProMemberByProjectVO" parameterType="kr.or.ddit.projects.project.vo.ProjectVO">
+		INSERT ALL
+		<foreach collection="proMemberList" item="proMemberVO" >
+			INTO PROJECT_MEMBER (
+			    PRO_ID
+			    , MEM_ID
+			    , AUTHORITY
+			) VALUES (
+			    #{proId, jdbcType=VARCHAR}
+			    , #{proMemberVO.memId, jdbcType=VARCHAR}
+			    , #{proMemberVO.authority, jdbcType=VARCHAR}
+			)
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<insert id="insertProMember" parameterType="kr.or.ddit.projects.member.vo.ProMemberVO">
+		INSERT INTO PROJECT_MEMBER (
+		    PRO_ID
+		    , MEM_ID
+		    , AUTHORITY
+		) VALUES (
+		    #{proId, jdbcType=VARCHAR}
+		    , #{memId, jdbcType=VARCHAR}
+		    , #{authority, jdbcType=VARCHAR}
+		)
+	</insert>
+
+
+
+</mapper>

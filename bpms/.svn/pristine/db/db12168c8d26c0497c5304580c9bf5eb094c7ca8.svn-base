@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--  [[개정이력(Modification Information)]]       -->
+<!--  수정일        수정자     수정내용               -->
+<!--  ==========   ======    ==============        -->
+<!--  2021. 1. 21.}     이선엽     최초작성               -->
+<!--  Copyright (c) 2021 by DDIT All right reserved -->
+<white-url>
+	<src>
+		<domain name="http://www.naver.com" desc="네이버">
+			<pattern>http://serviceapi.nmv.naver.com*</pattern>
+			<pattern>http://scrap.ad.naver.com/*</pattern>
+		</domain>
+		<domain name="http://www.sbs.co.kr" desc="SBS">
+			<pattern>http://netv.sbs.co.kr/sbox/silverlight/ClientBin/NeTVPlayer.xap*</pattern>
+			<pattern>http://news.sbs.co.kr/viewer/ClientBin/NeTVPlayer.xap*</pattern>
+			<pattern>http://news.sbs.co.kr/viewer/ClientBin/NewsPlayer.xap*</pattern>
+			<pattern>http://wizard2.sbs.co.kr*</pattern>
+			<pattern>http://wizard2.sbs.co.kr*</pattern>
+			<pattern>http://wizard2.sbs.co.kr/w3/template/ClientBin/tp1_caption_viewer.xap*</pattern>
+			<pattern>http://sbsplayer.sbs.co.kr/ClientBin/SBSPlayer.Viewer.xap*</pattern>
+		</domain>	
+		<domain name="http://www.imbc.com" desc="하나더TV">
+			<pattern>http://onemore.imbc.com/ClientBin/oneplus.xap*</pattern>
+		</domain>	
+		<domain name="http://www.detailview.co.kr" desc="디테일뷰">
+			<pattern>http://storage.detailview.co.kr*</pattern>
+			<pattern>http://www.detailview.co.kr*</pattern>
+			<pattern>http://beta.detailview.co.kr*</pattern>
+		</domain>		
+		<domain name="http://www.brightcove.com" desc="Brightcove">
+			<pattern>http://c.brightcove.com*</pattern>
+		</domain>		
+	</src>
+</white-url>
+

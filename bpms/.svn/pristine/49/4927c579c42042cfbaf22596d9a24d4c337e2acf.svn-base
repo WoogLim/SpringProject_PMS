@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.commons.dao.SignUpDAO">
+	<select id="idCheck" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM MEMBER
+		 WHERE MEM_ID = #{memId}
+	</select>
+	<insert id="insertMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO">
+		INSERT INTO MEMBER(
+			MEM_ID,
+			MEM_PASS,
+			MEM_NAME,
+			MEM_MAIL,
+			MEM_HP,
+			CREATE_DATE,
+			MEM_ALIVE,
+			MEM_DELETE,
+			ADMIN_ROLE,
+			MEM_ROLE
+		)
+		VALUES(
+			#{memId, jdbcType=VARCHAR}
+			,#{memPass, jdbcType=VARCHAR}
+			,#{memName, jdbcType=VARCHAR}
+			,#{memMail, jdbcType=VARCHAR}
+			,#{memHp, jdbcType=VARCHAR}
+			,SYSDATE
+			,#{memAlive, jdbcType=VARCHAR}
+			,#{memDelete, jdbcType=VARCHAR}
+			,'N'
+			,'ROLE_USER'
+		)
+	</insert>
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd" >
+<tiles-definitions>
+	<!-- 전수빈(DA) Tiles -->
+	<!-- 메인 -->
+	<definition name="index" extends="parent">
+		<put-attribute name="contents" value="/WEB-INF/views/index.jsp" />
+	</definition>
+	<!-- 일감 관련 -->
+	<definition name="work/*" extends="parent">
+		<put-attribute name="contents" value="/WEB-INF/views/project/work/{1}.jsp" />
+	</definition>
+	<!-- 이슈 관련 -->
+	<definition name="issue/*" extends="parent">
+		<put-attribute name="contents" value="/WEB-INF/views/project/issue/{1}.jsp" />
+	</definition>
+	<!-- 작업 내역 관련 -->
+	<definition name="history/*" extends="parent">
+		<put-attribute name="contents" value="/WEB-INF/views/project/history/{1}.jsp" />
+	</definition>
+	<!-- SCM Page -->
+	<definition name="scm/*" extends="parent">
+		<put-attribute name="contents" value="/WEB-INF/views/project/scm/{1}.jsp" />
+	</definition>
+	
+	<!-- Login Page -->
+	<definition name="BPMSlogin" template="/WEB-INF/views/login/BPMSlogin.jsp" />
+	<!-- SignUp Page -->
+	<definition name="signup/signUp" template="/WEB-INF/views/login/signUp.jsp" />
+	<!-- Error Page -->
+	<definition name="bpms/error" template="/WEB-INF/views/project/error/errorpage.jsp"/>
+</tiles-definitions>

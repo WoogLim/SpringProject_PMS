@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.projects.work.dao.AdminWorkDAO">
+
+	<sql id="searchDetailFrag">
+		<trim prefix=" WHERE " prefixOverrides="AND">
+			<if test="searchDetail != null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workRank)">
+					AND W.WORK_RANK = #{searchDetail.workRank}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workType)">
+					AND W.WORK_TYPE = #{searchDetail.workType}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workState)">
+					AND W.WORK_STATE = #{searchDetail.workState}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.proId)">
+					AND B.PRO_ID = #{searchDetail.proId}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.boardWriter)">
+					AND B.BOARD_WRITER = #{searchDetail.boardWriter}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.workDirector)">
+					AND W.WORK_DIRECTOR = #{searchDetail.workDirector}
+				</if>
+			</if>
+		</trim>
+	</sql>
+	
+	<sql id="dateSortFrag">
+		<if test="sortVO!=null and @org.apache.commons.lang3.StringUtils@isNotBlank(sortVO.sortType)">
+			<choose>
+				<when test="'date'.equals(sortVO.sortCondition) and 'DESC'.equals(sortVO.sortType)">
+					ORDER SIBLINGS BY B.CREATE_DATE DESC
+				</when>
+				<otherwise>
+					ORDER SIBLINGS BY B.CREATE_DATE ASC
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+
+	<select id="selectWorkList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		<![CDATA[
+		SELECT B.BOARD_NO
+		     , DECODE(LEVEL, 1, '', LPAD('└>', 6*2*(LEVEL-1)+2, '&nbsp;'))||B.BOARD_TITLE BOARD_TITLE
+		     , B.BOARD_CONTENT
+		     , B.BOARD_WRITER
+		     , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		     , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		     , B.BOARD_SHOW
+		     , B.PRO_ID
+		     , B.GROUP_CODE
+		     , B.CODE
+		
+		     , W.WORK_ID
+		     , W.WORK_RANK
+		     , W.WORK_TYPE
+		     , W.WORK_STATE
+		     , W.WORK_SHOW
+		     , TO_CHAR(W.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		     , TO_CHAR(W.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		     , W.PROGRESS
+		     , W.WORK_DIRECTOR
+		     , W.WORK_PARENT
+		     
+		     , M.MEM_NAME
+		  FROM WORK W INNER JOIN BOARD B ON (W.WORK_ID = B.BOARD_NO)
+		  			  LEFT OUTER JOIN MEMBER M ON (M.MEM_ID = W.WORK_DIRECTOR)
+		  ]]>
+		  <include refid="searchDetailFrag"></include>
+		 START WITH W.WORK_PARENT IS NULL
+		 CONNECT BY PRIOR W.WORK_ID = W.WORK_PARENT
+		 <include refid="dateSortFrag"></include>
+	</select>
+	
+	<select id="selectWorkCount" parameterType="kr.or.ddit.vo.PagingVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM WORK W INNER JOIN BOARD B ON (W.WORK_ID = B.BOARD_NO)
+		<include refid="searchDetailFrag"></include>
+	</select>
+	
+	<select id="selectWorkListByMember" parameterType="kr.or.ddit.projects.member.vo.MemberVO" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		SELECT BB.*
+		  FROM(
+		    SELECT AA.*, ROWNUM RNUM
+		      FROM(
+		        SELECT BOARD_TITLE
+		             , BOARD_WRITER
+		             , BOARD_SHOW
+		             , TO_CHAR(B.CREATE_DATE, 'YYYY-MM-DD HH24:MI') CREATE_DATE
+		             , TO_CHAR(B.MODIFY_DATE, 'YYYY-MM-DD HH24:MI') MODIFY_DATE
+		             , PRO_ID
+		             , WORK_ID
+		             , WORK_RANK
+		             , WORK_TYPE
+		             , WORK_STATE
+		             , WORK_SHOW
+		             , TO_CHAR(W.START_DATE, 'YYYY-MM-DD HH24:MI') START_DATE
+		             , TO_CHAR(W.END_DATE, 'YYYY-MM-DD HH24:MI') END_DATE
+		             , PROGRESS
+		             , WORK_DIRECTOR
+		          FROM BOARD B INNER JOIN WORK W ON (B.BOARD_NO = W.WORK_ID)
+		         WHERE B.BOARD_WRITER = #{memId}
+		           AND W.WORK_SHOW = 'Y'
+		        ORDER BY B.CREATE_DATE DESC) AA
+		    ) BB
+		<![CDATA[
+		WHERE RNUM < 6
+		]]>
+	</select>
+	
+	<sql id="writerAndDirectorSearchFrag">
+		<trim prefix=" WHERE " prefixOverrides="AND">
+			<if test="searchDetail != null">
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchDetail.proId)">
+					AND B.PRO_ID = #{searchDetail.proId}
+				</if>
+			</if>
+		</trim>
+	</sql>
+		
+	<select id="selectWorkDirectorList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		SELECT DISTINCT W.WORK_DIRECTOR
+					  , M.MEM_NAME
+		  FROM WORK W INNER JOIN BOARD B ON (W.WORK_ID = B.BOARD_NO)
+		  			  INNER JOIN MEMBER M ON (W.WORK_DIRECTOR = M.MEM_ID)
+		<include refid="writerAndDirectorSearchFrag"></include>
+	</select>
+	
+	<select id="selectBoardWriterList" parameterType="kr.or.ddit.vo.PagingVO" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		SELECT DISTINCT B.BOARD_WRITER, MEM_NAME
+		  FROM WORK W INNER JOIN BOARD B ON (W.WORK_ID = B.BOARD_NO)
+		  			  INNER JOIN MEMBER M ON (B.BOARD_WRITER = M.MEM_ID)
+		<include refid="writerAndDirectorSearchFrag"></include>
+	</select>
+	
+	<select id="selectWorkListByState" resultType="kr.or.ddit.projects.work.vo.WorkVO">
+		SELECT WORK_STATE
+		     , COUNT(*) WORK_CNT_PER_STATE
+		  FROM BOARD B, WORK W
+		 WHERE B.BOARD_NO = W.WORK_ID
+		   AND W.WORK_STATE IN (SELECT TEXT
+		                          FROM CUSTOM_INFO
+		                         WHERE GROUP_CODE = 'WS')
+		GROUP BY WORK_STATE
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

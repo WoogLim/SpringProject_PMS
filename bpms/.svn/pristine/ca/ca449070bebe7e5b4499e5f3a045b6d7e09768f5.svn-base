@@ -1,0 +1,20 @@
+package kr.or.ddit.projects.kanban.dao;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import kr.or.ddit.projects.kanban.vo.KanbanStickerVO;
+import kr.or.ddit.projects.kanban.vo.KanbanVO;
+import kr.or.ddit.projects.member.vo.MemberVO;
+
+@Repository
+public interface KanbanDAO {
+	public List<KanbanVO> myKanbanList(MemberVO memberVO);
+
+	public int insertSticker(KanbanStickerVO kanbanSticker);
+
+	public KanbanStickerVO currentSticker(KanbanStickerVO kanbanSticker);
+	
+	public KanbanStickerVO retrieveSticker(KanbanStickerVO kanbanSticker);
+}

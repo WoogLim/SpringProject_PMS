@@ -1,0 +1,72 @@
+package kr.or.ddit.projects.member.service.impl;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import kr.or.ddit.enumpkg.ServiceResult;
+import kr.or.ddit.projects.base.service.BaseService;
+import kr.or.ddit.projects.board.vo.BoardVO;
+import kr.or.ddit.projects.member.service.AdminMemberService;
+import kr.or.ddit.projects.member.service.UserMemberService;
+import kr.or.ddit.projects.member.vo.MemberVO;
+import kr.or.ddit.projects.project.vo.ProjectVO;
+import kr.or.ddit.vo.MailVO;
+import kr.or.ddit.vo.PagingVO;
+
+/**
+ * @author 임건
+ * @since 2021. 2. 15.
+ * @version 1.0
+ * @see javax.servlet.http.HttpServlet
+ * 
+ *      <pre>
+ * [[개정이력(Modification Information)]]
+ * 수정일           수정자         수정내용
+ * -----------     --------    ----------------------
+ * 2021. 2. 15.    임건		      최초작성
+ * Copyright (c) 2021 by DDIT All right reserved
+ *      </pre>
+ */
+@Service
+public class UserMemberServiceImpl extends BaseService implements UserMemberService {
+
+	@Inject
+	private PasswordEncoder passwordEncoder;
+
+	private void encodePassword(MemberVO memberVO) {
+		String encoded = passwordEncoder.encode(memberVO.getMemPass());
+		memberVO.setMemPass(encoded);
+	}
+
+	@Override
+	public List<ProjectVO> retrieveMemberProjectList(MemberVO memberVO) {
+		return userMemberDAO.retrieveMemberProjectList(memberVO);
+	}
+
+	@Override
+	public List<ProjectVO> retrieveProjectNoticeList(MemberVO memberVO) {
+		return userMemberDAO.retrieveProjectNoticeList(memberVO);
+	}
+
+	@Override
+	public ServiceResult memberModifyPassword(MemberVO memberVO) {
+		ServiceResult result = null;
+		encodePassword(memberVO);
+		
+		int cnt = userMemberDAO.updateMemberPass(memberVO);
+		if(cnt > 0) {
+			result = ServiceResult.OK;
+		} else {
+			result = ServiceResult.FAILED;
+		}
+		
+		return result;
+	}
+
+}

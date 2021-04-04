@@ -1,0 +1,32 @@
+package kr.or.ddit.projects.schedule.controller;
+
+import javax.validation.Valid;
+
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import kr.or.ddit.projects.base.controller.BaseController;
+import kr.or.ddit.projects.schedule.vo.CalendarVO;
+
+@Controller
+@RequestMapping("/schedule")
+public class ScheduleInsertController extends BaseController {
+
+	@RequestMapping("insertSchedule.do")
+	public void scheduleInsert(@Valid @ModelAttribute("schedule") CalendarVO calendarVO, Model model) {
+		//담당자, 프로젝트ID는 로그인 회원에서 조회 후 아래 하드코딩 수정
+		calendarVO.setProId("p-00001");
+		scheduleService.personalInsertSchedule(calendarVO);
+	}
+
+	@RequestMapping(value = "insertSchedule.do", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public String scheduleInsertAjax(@ModelAttribute("schedule") CalendarVO calendarVO, Model model) {
+
+		scheduleInsert(calendarVO, model);
+
+		return "jsonView";
+	}
+}

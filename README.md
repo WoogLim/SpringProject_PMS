@@ -4,6 +4,8 @@
 ### 주 역할 : FrontEnd, BackEnd
 ### 보조 역할 : 기획
 
+### 기획 기간 2주 개발기간 6주
+
 주 메뉴 화면
 ![image](https://user-images.githubusercontent.com/51357635/127415027-1d3c4c2e-b40f-4352-9440-a065003e1e5b.png)
 ![image](https://user-images.githubusercontent.com/51357635/127415087-e56ee878-22a8-450b-901b-d5d465f694d8.png)
